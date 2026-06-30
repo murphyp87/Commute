@@ -34,24 +34,24 @@ function buildPermutations(direction, origin) {
     // Filter corridor waypoints by geography
     const eligible = geoFilter(corridor.waypoints, origin.lat, direction);
 
-    // Generate all subsets of corridor waypoints (including empty = no forcing points)
-    const wpSubsets = subsets(eligible);
-    wpSubsets.push([]); // always include the corridor with no optional waypoints
+    // Direct corridors (no waypoints defined) get one empty subset.
+    // Non-direct corridors only generate subsets that include at least one waypoint —
+    // an empty subset would duplicate the direct route with wrong toll assumptions.
+    const isDirect = corridor.waypoints.length === 0;
+    const wpSubsets = isDirect ? [[]] : subsets(eligible);
 
-    // Deduplicate subsets (subsets() already includes [], so remove duplicate [])
-    const seen = new Set();
-    const uniqueSubsets = [];
-    for (const s of wpSubsets) {
-      const key = s.map(w => w.id).sort().join(',');
-      if (!seen.has(key)) { seen.add(key); uniqueSubsets.push(s); }
-    }
+    // holmdel_crawfords applies to all corridors except those flagged skipCrawfords
+    // (e.g. I-280, which never uses the GSP near home)
+    const crawfordsApply = !corridor.skipCrawfords &&
+      geoFilter([crawfords], origin.lat, direction).length > 0;
 
-    for (const wpSubset of uniqueSubsets) {
-      // Optionally append holmdel_crawfords if geographically eligible
-      const crawfordsEligible = geoFilter([crawfords], origin.lat, direction).length > 0;
+    const required = new Set(corridor.requiredWaypoints || []);
 
-      // Generate with and without holmdel_crawfords
-      const variants = crawfordsEligible ? [false, true] : [false];
+    for (const wpSubset of wpSubsets) {
+      // Skip subsets that are missing a required waypoint
+      if (required.size > 0 && !([...required].every(id => wpSubset.some(w => w.id === id)))) continue;
+      // Generate with and without holmdel_crawfords where applicable
+      const variants = crawfordsApply ? [false, true] : [false];
 
       for (const useCrawfords of variants) {
         // Build ordered waypoint list: sort N→S (decreasing lat) for toHome, S→N for toWork
@@ -68,8 +68,9 @@ function buildPermutations(direction, origin) {
           for (const seg of (wp.tollSegments || [])) tollSegmentIds.add(seg);
         }
 
-        // If holmdel_crawfords not used, add the default Exit 117 ramp toll
-        if (!useCrawfords) tollSegmentIds.add('gsp_holmdel_ramp');
+        // GSP corridors: if holmdel_crawfords not used, add the Exit 117 ramp toll ($0.79).
+        // Skip for corridors that don't use the GSP near home (skipCrawfords flag).
+        if (!corridor.skipCrawfords && !useCrawfords) tollSegmentIds.add('gsp_holmdel_ramp');
 
         const label = buildLabel(corridor.name, wpSubset, useCrawfords);
 

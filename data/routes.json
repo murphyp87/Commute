@@ -23,12 +23,12 @@
       },
       {
         "id": "tpk_16e_seaview",
-        "name": "Turnpike 16E via Seaview Dr",
+        "name": "Turnpike 16E (Seaview)",
         "description": "Forced on-ramp at Seaview Dr, Secaucus onto Turnpike Eastern Spur",
         "waypoints": [
           {
             "id": "secaucus_seaview",
-            "name": "Secaucus — Seaview Dr On-Ramp",
+            "name": "Seaview Dr, Secaucus",
             "address": "Seaview Dr, Secaucus, NJ 07094",
             "lat": 40.7672,
             "lng": -74.0744,
@@ -39,12 +39,12 @@
       },
       {
         "id": "tpk_16e_eastern",
-        "name": "Turnpike 16E via Eastern Spur On-Ramp",
+        "name": "Turnpike 16E (Eastern Spur)",
         "description": "Forced on-ramp directly at NJ Turnpike Eastern Spur, Secaucus",
         "waypoints": [
           {
             "id": "secaucus_eastern_spur",
-            "name": "Secaucus — NJ Turnpike Eastern Spur On-Ramp",
+            "name": "Eastern Spur, Secaucus",
             "address": "NJ Turnpike Eastern Spur, Secaucus, NJ 07096",
             "lat": 40.7665,
             "lng": -74.0671,
@@ -55,8 +55,9 @@
       },
       {
         "id": "gsp_bloomfield",
-        "name": "GSP via Bloomfield",
-        "description": "Forced local roads via Grant Ave/Nutley to GSP southbound on-ramp at Bloomfield, then GSP all the way south",
+        "name": "All-GSP",
+        "description": "Forced local roads via Grant Ave/Nutley to GSP southbound on-ramp at Bloomfield, then GSP all the way south. Grant Ave is required — it only makes sense paired with the Bloomfield on-ramp.",
+        "requiredWaypoints": ["nutley_grant"],
         "waypoints": [
           {
             "id": "nutley_grant",
@@ -68,7 +69,7 @@
           },
           {
             "id": "gsp_bloomfield_sb",
-            "name": "GSP Bloomfield On-Ramp (SB)",
+            "name": "Bloomfield On-Ramp",
             "address": "Garden State Pkwy, Bloomfield, NJ 07003",
             "lat": 40.7987,
             "lng": -74.1899,
@@ -89,12 +90,12 @@
       },
       {
         "id": "gsp_bloomfield",
-        "name": "GSP via Bloomfield",
+        "name": "All-GSP",
         "description": "Forced all-GSP route north: Exit 116/117 → Union barrier → Bloomfield exit → local to work",
         "waypoints": [
           {
             "id": "gsp_union_nb",
-            "name": "GSP at Union (NB)",
+            "name": "GSP Union",
             "address": "Garden State Pkwy, Union, NJ 07083",
             "lat": 40.6977,
             "lng": -74.2558,
@@ -102,7 +103,7 @@
           },
           {
             "id": "gsp_bloomfield_nb",
-            "name": "GSP at Bloomfield (NB)",
+            "name": "GSP Bloomfield",
             "address": "Garden State Pkwy, Bloomfield, NJ 07017",
             "lat": 40.7856,
             "lng": -74.2001,
@@ -110,7 +111,7 @@
           },
           {
             "id": "clifton_nj3",
-            "name": "NJ-3 / Clifton Approach",
+            "name": "NJ-3 Clifton",
             "address": "NJ-3, Clifton, NJ 07014",
             "lat": 40.8267,
             "lng": -74.1347,
@@ -123,10 +124,11 @@
         "id": "i280",
         "name": "I-280 / Essex Freeway",
         "description": "Forced route via I-280 through Newark — avoids Parkway entirely",
+        "skipCrawfords": true,
         "waypoints": [
           {
             "id": "newark_i280",
-            "name": "Essex Freeway / Newark (I-280)",
+            "name": "I-280 Newark",
             "address": "I-280, Newark, NJ 07103",
             "lat": 40.7524,
             "lng": -74.1915,
