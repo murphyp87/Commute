@@ -1,0 +1,17 @@
+{
+  "locations": {
+    "work": {
+      "address": "77 River Rd, Clifton, NJ 07014",
+      "lat": 40.8268293,
+      "lng": -74.1370336
+    },
+    "home": {
+      "address": "45 Stonehenge Dr, Lincroft, NJ 07738",
+      "lat": 40.336069,
+      "lng": -74.1196508
+    }
+  },
+  "defaultHourlyRate": 25,
+  "puppeteerHeadless": true,
+  "topResultsCount": 5
+}

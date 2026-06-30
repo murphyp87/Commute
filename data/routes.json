@@ -1,0 +1,140 @@
+{
+  "_comment": "Waypoints are Google Maps forcing points — intermediate coords that make Maps take a specific route it would not suggest naturally. holmdel_crawfords forces GSP Exit 116 (free) instead of default Exit 117 ($0.79 each way); include it on any route to save that ramp cost.",
+
+  "sharedWaypoints": {
+    "holmdel_crawfords": {
+      "id": "holmdel_crawfords",
+      "name": "Crawfords Corner Rd / Holmdel",
+      "address": "Crawfords Corner Rd, Holmdel, NJ 07733",
+      "lat": 40.3818,
+      "lng": -74.1814,
+      "note": "Forces GSP Exit 116 (no toll). Omitting uses Exit 117 and adds gsp_holmdel_ramp ($0.79)."
+    }
+  },
+
+  "corridors": {
+    "toHome": [
+      {
+        "id": "direct_16w",
+        "name": "Direct — Turnpike 16W",
+        "description": "Google Maps natural route via NJ-3 east to Turnpike 16W, Exit 11 to GSP south",
+        "waypoints": [],
+        "tollSegments": ["njtp_16w_to_11", "gsp_raritan_sb"]
+      },
+      {
+        "id": "tpk_16e_seaview",
+        "name": "Turnpike 16E via Seaview Dr",
+        "description": "Forced on-ramp at Seaview Dr, Secaucus onto Turnpike Eastern Spur",
+        "waypoints": [
+          {
+            "id": "secaucus_seaview",
+            "name": "Secaucus — Seaview Dr On-Ramp",
+            "address": "Seaview Dr, Secaucus, NJ 07094",
+            "lat": 40.7672,
+            "lng": -74.0744,
+            "tollSegments": []
+          }
+        ],
+        "tollSegments": ["njtp_16e_to_11", "gsp_raritan_sb"]
+      },
+      {
+        "id": "tpk_16e_eastern",
+        "name": "Turnpike 16E via Eastern Spur On-Ramp",
+        "description": "Forced on-ramp directly at NJ Turnpike Eastern Spur, Secaucus",
+        "waypoints": [
+          {
+            "id": "secaucus_eastern_spur",
+            "name": "Secaucus — NJ Turnpike Eastern Spur On-Ramp",
+            "address": "NJ Turnpike Eastern Spur, Secaucus, NJ 07096",
+            "lat": 40.7665,
+            "lng": -74.0671,
+            "tollSegments": []
+          }
+        ],
+        "tollSegments": ["njtp_16e_to_11", "gsp_raritan_sb"]
+      },
+      {
+        "id": "gsp_bloomfield",
+        "name": "GSP via Bloomfield",
+        "description": "Forced local roads via Grant Ave/Nutley to GSP southbound on-ramp at Bloomfield, then GSP all the way south",
+        "waypoints": [
+          {
+            "id": "nutley_grant",
+            "name": "Grant Ave / Nutley",
+            "address": "Grant Ave, Nutley, NJ 07110",
+            "lat": 40.8138,
+            "lng": -74.1419,
+            "tollSegments": []
+          },
+          {
+            "id": "gsp_bloomfield_sb",
+            "name": "GSP Bloomfield On-Ramp (SB)",
+            "address": "Garden State Pkwy, Bloomfield, NJ 07003",
+            "lat": 40.7987,
+            "lng": -74.1899,
+            "tollSegments": ["gsp_bloomfield_se"]
+          }
+        ],
+        "tollSegments": ["gsp_raritan_sb"]
+      }
+    ],
+
+    "toWork": [
+      {
+        "id": "direct_16w",
+        "name": "Direct — Turnpike 16W",
+        "description": "Google Maps natural route: GSP north to Exit 11, Turnpike to 16W, NJ-3 west to work",
+        "waypoints": [],
+        "tollSegments": ["njtp_16w_to_11"]
+      },
+      {
+        "id": "gsp_bloomfield",
+        "name": "GSP via Bloomfield",
+        "description": "Forced all-GSP route north: Exit 116/117 → Union barrier → Bloomfield exit → local to work",
+        "waypoints": [
+          {
+            "id": "gsp_union_nb",
+            "name": "GSP at Union (NB)",
+            "address": "Garden State Pkwy, Union, NJ 07083",
+            "lat": 40.6977,
+            "lng": -74.2558,
+            "tollSegments": ["gsp_union_nb_barrier"]
+          },
+          {
+            "id": "gsp_bloomfield_nb",
+            "name": "GSP at Bloomfield (NB)",
+            "address": "Garden State Pkwy, Bloomfield, NJ 07017",
+            "lat": 40.7856,
+            "lng": -74.2001,
+            "tollSegments": ["gsp_bloomfield_nx"]
+          },
+          {
+            "id": "clifton_nj3",
+            "name": "NJ-3 / Clifton Approach",
+            "address": "NJ-3, Clifton, NJ 07014",
+            "lat": 40.8267,
+            "lng": -74.1347,
+            "tollSegments": []
+          }
+        ],
+        "tollSegments": []
+      },
+      {
+        "id": "i280",
+        "name": "I-280 / Essex Freeway",
+        "description": "Forced route via I-280 through Newark — avoids Parkway entirely",
+        "waypoints": [
+          {
+            "id": "newark_i280",
+            "name": "Essex Freeway / Newark (I-280)",
+            "address": "I-280, Newark, NJ 07103",
+            "lat": 40.7524,
+            "lng": -74.1915,
+            "tollSegments": []
+          }
+        ],
+        "tollSegments": []
+      }
+    ]
+  }
+}

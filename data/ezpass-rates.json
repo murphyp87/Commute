@@ -1,0 +1,62 @@
+{
+  "_comment": "All costs are EZ-Pass Class 1 (passenger car / 2-axle). GSP rates from 2026 GSP EZ-Pass rate sheet. Turnpike rates from 2026 TPK Class 1 Passenger Cars rate table — PLACEHOLDERS marked; look up Entry→Exit pair in the matrix PDF.",
+
+  "segments": {
+    "gsp_holmdel_ramp": {
+      "name": "GSP Holmdel Ramp (Exit 117)",
+      "road": "GSP",
+      "milepost": 113.6,
+      "description": "Charged in either direction when NOT using holmdel_crawfords (Exit 117). NE = $0.79, SX = $0.79.",
+      "ezpassCost": 0.79
+    },
+    "gsp_raritan_sb": {
+      "name": "GSP Raritan Southbound Barrier",
+      "road": "GSP",
+      "milepost": 125.4,
+      "description": "Main line barrier — charges all southbound traffic.",
+      "ezpassCost": 2.25
+    },
+    "gsp_bloomfield_se": {
+      "name": "GSP Bloomfield Southbound Entrance Ramp",
+      "road": "GSP",
+      "milepost": 148.9,
+      "description": "Southbound entrance ramp at Bloomfield (Exit 148). Only applies to GSP via Bloomfield toHome route.",
+      "ezpassCost": 0.79
+    },
+    "gsp_union_nb_barrier": {
+      "name": "GSP Union Northbound Barrier",
+      "road": "GSP",
+      "milepost": 142.7,
+      "description": "Main line barrier — charges all northbound traffic.",
+      "ezpassCost": 2.25
+    },
+    "gsp_bloomfield_nx": {
+      "name": "GSP Bloomfield Northbound Exit Ramp",
+      "road": "GSP",
+      "milepost": 148.9,
+      "description": "Northbound exit ramp at Bloomfield (Exit 148). toWork GSP route only.",
+      "ezpassCost": 0.79
+    },
+    "njtp_16w_to_11": {
+      "name": "NJ Turnpike Exit 16W ↔ Exit 11",
+      "road": "NJTP",
+      "entryExit": "16W ↔ 11",
+      "description": "PLACEHOLDER — look up Entry 16W → Exit 11 (or reverse) in 2026 TPK Class 1 EZ-Pass matrix. This is the natural/direct route toll.",
+      "ezpassCost": null
+    },
+    "njtp_16e_to_11": {
+      "name": "NJ Turnpike Exit 16E ↔ Exit 11",
+      "road": "NJTP",
+      "entryExit": "16E ↔ 11",
+      "description": "PLACEHOLDER — look up Entry 16E → Exit 11 (or reverse) in 2026 TPK Class 1 EZ-Pass matrix. Used by Secaucus forced routes.",
+      "ezpassCost": null
+    },
+    "njtp_15w_to_11": {
+      "name": "NJ Turnpike Exit 15W ↔ Exit 11",
+      "road": "NJTP",
+      "entryExit": "15W ↔ 11",
+      "description": "PLACEHOLDER — look up Entry 15W → Exit 11 in 2026 TPK Class 1 EZ-Pass matrix. Reserve for future 15W waypoint if needed.",
+      "ezpassCost": null
+    }
+  }
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NJ Commute Optimizer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>NJ Commute Optimizer</h1>
+
+    <div class="locations">
+      <div class="location-line">
+        <span class="dot work"></span>
+        <span id="workAddr">Loading...</span>
+      </div>
+      <div class="location-line">
+        <span class="dot home"></span>
+        <span id="homeAddr">Loading...</span>
+      </div>
+    </div>
+
+    <div class="rate-row">
+      <label for="hourlyRate">Time value</label>
+      <span>$</span>
+      <input type="number" id="hourlyRate" value="25" min="1" max="200" step="1">
+      <span>/ hr</span>
+    </div>
+
+    <div class="buttons">
+      <button class="dir-btn" id="btnToHome" onclick="optimize('toHome')">
+        🏠 To Home
+      </button>
+      <button class="dir-btn" id="btnToWork" onclick="optimize('toWork')">
+        🏢 To Work
+      </button>
+    </div>
+
+    <div class="geo-row">
+      <button class="geo-btn" id="btnGeo" onclick="useCurrentLocation()">
+        📍 Use my current location as start
+      </button>
+      <span id="geoStatus"></span>
+    </div>
+
+    <div id="status" class="status hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
