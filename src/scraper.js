@@ -76,7 +76,12 @@ async function scrapeTimes(permutations, origin, destination) {
   const headless = config.puppeteerHeadless !== false; // default true; set false to watch
   const browser = await puppeteer.launch({
     headless: headless ? 'new' : false,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage', // required on Linux containers (small /dev/shm)
+      '--disable-gpu',
+    ]
   });
 
   const page = await browser.newPage();
