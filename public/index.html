@@ -8,43 +8,58 @@
 </head>
 <body>
   <div class="container">
-    <h1>NJ Commute Optimizer</h1>
+    <h1>NJ Commute</h1>
+    <p class="subtitle">Drive time + tolls, ranked by value</p>
 
-    <div class="locations">
-      <div class="location-line">
-        <span class="dot work"></span>
-        <span id="workAddr">Loading...</span>
+    <div class="card locations-card">
+      <div class="location-row">
+        <span class="dot dot-work"></span>
+        <div class="location-text">
+          <div class="location-label">Work</div>
+          <div class="location-addr" id="workAddr">Loading…</div>
+        </div>
       </div>
-      <div class="location-line">
-        <span class="dot home"></span>
-        <span id="homeAddr">Loading...</span>
+      <div class="location-divider"></div>
+      <div class="location-row">
+        <span class="dot dot-home"></span>
+        <div class="location-text">
+          <div class="location-label">Home</div>
+          <div class="location-addr" id="homeAddr">Loading…</div>
+        </div>
       </div>
     </div>
 
-    <div class="rate-row">
-      <label for="hourlyRate">Time value</label>
-      <span>$</span>
-      <input type="number" id="hourlyRate" value="25" min="1" max="200" step="1">
-      <span>/ hr</span>
+    <div class="card rate-card">
+      <label class="rate-label" for="hourlyRate">My time is worth</label>
+      <div class="rate-input-row">
+        <span class="rate-symbol">$</span>
+        <input type="number" id="hourlyRate" min="1" max="500" step="1">
+        <span class="rate-unit">/ hour</span>
+      </div>
     </div>
 
-    <div class="buttons">
-      <button class="dir-btn" id="btnToHome" onclick="optimize('toHome')">
-        🏠 To Home
+    <div class="dir-buttons">
+      <button class="dir-btn btn-home" id="btnToHome" onclick="optimize('toHome')">
+        <span class="btn-icon">🏠</span>
+        <span class="btn-label">To Home</span>
       </button>
-      <button class="dir-btn" id="btnToWork" onclick="optimize('toWork')">
-        🏢 To Work
+      <button class="dir-btn btn-work" id="btnToWork" onclick="optimize('toWork')">
+        <span class="btn-icon">🏢</span>
+        <span class="btn-label">To Work</span>
       </button>
     </div>
 
     <div class="geo-row">
       <button class="geo-btn" id="btnGeo" onclick="useCurrentLocation()">
-        📍 Use my current location as start
+        📍 Use my current location as start point
       </button>
-      <span id="geoStatus"></span>
+      <div id="geoStatus" class="geo-status"></div>
     </div>
 
-    <div id="status" class="status hidden"></div>
+    <div id="statusBox" class="status-box hidden">
+      <div class="spinner"></div>
+      <div id="statusText" class="status-text"></div>
+    </div>
   </div>
 
   <script src="app.js"></script>

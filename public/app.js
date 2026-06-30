@@ -2,42 +2,70 @@ let currentLat = null;
 let currentLng = null;
 
 async function init() {
-  const cfg = await fetch('/config').then(r => r.json());
-  document.getElementById('workAddr').textContent = cfg.work.address;
-  document.getElementById('homeAddr').textContent = cfg.home.address;
-  document.getElementById('hourlyRate').value = cfg.defaultHourlyRate;
+  try {
+    const cfg = await fetch('/config').then(r => r.json());
+    document.getElementById('workAddr').textContent = cfg.work.address;
+    document.getElementById('homeAddr').textContent = cfg.home.address;
+    document.getElementById('hourlyRate').value = cfg.defaultHourlyRate;
+  } catch (e) {
+    document.getElementById('workAddr').textContent = 'Could not load config';
+  }
 }
 
 function useCurrentLocation() {
-  const status = document.getElementById('geoStatus');
+  if (!navigator.geolocation) {
+    setGeoStatus('Geolocation not supported by this browser.');
+    return;
+  }
   const btn = document.getElementById('btnGeo');
   btn.disabled = true;
-  status.textContent = 'Locating…';
+  setGeoStatus('Locating…');
 
   navigator.geolocation.getCurrentPosition(
     pos => {
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
-      status.textContent = `📍 ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
-      btn.textContent = '📍 Location set — click again to update';
+      setGeoStatus(`📍 ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)} — will be used as start`);
+      btn.textContent = '📍 Update my location';
       btn.disabled = false;
     },
     err => {
-      status.textContent = `Location error: ${err.message}`;
+      setGeoStatus(`Could not get location: ${err.message}`);
       btn.disabled = false;
-    }
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
   );
 }
 
+function setGeoStatus(msg) {
+  document.getElementById('geoStatus').textContent = msg;
+}
+
+function setStatus(msg, isError = false) {
+  const box = document.getElementById('statusBox');
+  const text = document.getElementById('statusText');
+  text.textContent = msg;
+  box.classList.remove('hidden', 'status-error');
+  if (isError) {
+    box.classList.add('status-error');
+    box.querySelector('.spinner').style.display = 'none';
+  } else {
+    box.querySelector('.spinner').style.display = '';
+  }
+}
+
+function setButtons(disabled) {
+  document.getElementById('btnToHome').disabled = disabled;
+  document.getElementById('btnToWork').disabled = disabled;
+  document.getElementById('btnGeo').disabled = disabled;
+}
+
 async function optimize(direction) {
-  const hourlyRate = document.getElementById('hourlyRate').value;
-  const statusEl = document.getElementById('status');
+  const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 25;
+  const dirLabel = direction === 'toHome' ? 'Home' : 'Work';
 
-  statusEl.textContent = 'Scraping Google Maps — this takes 30–60 seconds…';
-  statusEl.classList.remove('hidden', 'error');
-
-  document.getElementById('btnToHome').disabled = true;
-  document.getElementById('btnToWork').disabled = true;
+  setButtons(true);
+  setStatus(`Scraping Google Maps for all routes to ${dirLabel}… this takes about 2 minutes.`);
 
   const body = { direction, hourlyRate };
   if (currentLat !== null) {
@@ -52,20 +80,17 @@ async function optimize(direction) {
       body: JSON.stringify(body)
     });
 
+    const data = await resp.json();
+
     if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error || 'Server error');
+      throw new Error(data.error || `Server error ${resp.status}`);
     }
 
-    const data = await resp.json();
     sessionStorage.setItem('commuteResults', JSON.stringify(data));
     window.location.href = '/results.html';
   } catch (err) {
-    statusEl.textContent = `Error: ${err.message}`;
-    statusEl.classList.add('error');
-  } finally {
-    document.getElementById('btnToHome').disabled = false;
-    document.getElementById('btnToWork').disabled = false;
+    setStatus(`Error: ${err.message}`, true);
+    setButtons(false);
   }
 }
 
