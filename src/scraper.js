@@ -8,10 +8,12 @@ const config = require('../config.json');
 // CSS selectors to try, in order, when extracting drive time from the Maps DOM.
 // Google changes these periodically — update here if scraping breaks.
 const TIME_SELECTORS = [
-  '[data-value][aria-label*="min"]',       // aria-labeled duration chips
-  '.Fk3sm',                                 // common duration class (as of 2024)
+  '.Fk3sm',                                 // confirmed working (tested 2026-06)
+  '.XdKEzd',                                // contains "54 min48.4 miles" — needs text split
   '.UzeeY',                                 // alternate duration class
-  'div[class*="duration"]',                 // fallback: any div with "duration" in class
+  '[data-value][aria-label*="min"]',        // aria-labeled duration chips
+  '[aria-label*=" min"]',
+  'div[class*="duration"]',
 ];
 
 // Builds a Google Maps directions URL with ordered waypoints.
@@ -73,7 +75,7 @@ function parseTimeText(text) {
 async function scrapeTimes(permutations, origin, destination) {
   const headless = config.puppeteerHeadless !== false; // default true; set false to watch
   const browser = await puppeteer.launch({
-    headless,
+    headless: headless ? 'new' : false,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
