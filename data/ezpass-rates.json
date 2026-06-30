@@ -41,15 +41,15 @@
       "name": "NJ Turnpike Exit 16W ↔ Exit 11",
       "road": "NJTP",
       "entryExit": "16W ↔ 11",
-      "description": "PLACEHOLDER — look up Entry 16W → Exit 11 (or reverse) in 2026 TPK Class 1 EZ-Pass matrix. This is the natural/direct route toll.",
-      "ezpassCost": null
+      "description": "Natural/direct route toll. 2026 EZ-Pass Class 1 rate.",
+      "ezpassCost": 8.13
     },
     "njtp_16e_to_11": {
       "name": "NJ Turnpike Exit 16E ↔ Exit 11",
       "road": "NJTP",
       "entryExit": "16E ↔ 11",
-      "description": "PLACEHOLDER — look up Entry 16E → Exit 11 (or reverse) in 2026 TPK Class 1 EZ-Pass matrix. Used by Secaucus forced routes.",
-      "ezpassCost": null
+      "description": "Secaucus forced routes. 2026 EZ-Pass Class 1 rate.",
+      "ezpassCost": 8.13
     },
     "njtp_15w_to_11": {
       "name": "NJ Turnpike Exit 15W ↔ Exit 11",
