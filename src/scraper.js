@@ -31,8 +31,14 @@ function buildMapsUrl(origin, destination, waypoints) {
 async function scrapeOneRoute(page, url, label) {
   try {
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-    // Give the route panel time to render
-    await new Promise(r => setTimeout(r, 2000));
+
+    // Fast path: wait directly for the known-good selector instead of a blind sleep.
+    try {
+      await page.waitForSelector(TIME_SELECTORS[0], { timeout: 4000 });
+    } catch {
+      // Didn't show up in time — give the panel a bit longer, then try every selector below.
+      await new Promise(r => setTimeout(r, 1000));
+    }
 
     for (const selector of TIME_SELECTORS) {
       try {
@@ -72,8 +78,12 @@ function parseTimeText(text) {
 
 // Scrapes drive times for all permutations.
 // Returns the permutations array enriched with { mapsUrl, driveTimeMinutes }.
+// Routes are split across a small pool of concurrent tabs (scraperConcurrency in
+// config.json) instead of visiting one page at a time — this is the main lever
+// on total request time.
 async function scrapeTimes(permutations, origin, destination) {
   const headless = config.puppeteerHeadless !== false; // default true; set false to watch
+  const concurrency = Math.max(1, Math.min(config.scraperConcurrency || 4, permutations.length));
   const browser = await puppeteer.launch({
     headless: headless ? 'new' : false,
     args: [
@@ -84,17 +94,23 @@ async function scrapeTimes(permutations, origin, destination) {
     ]
   });
 
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 800 });
+  const results = new Array(permutations.length);
+  let nextIndex = 0;
 
-  const results = [];
-
-  for (const perm of permutations) {
-    const url = buildMapsUrl(origin, destination, perm.waypoints);
-    const driveTimeMinutes = await scrapeOneRoute(page, url, perm.label);
-    results.push({ ...perm, mapsUrl: url, driveTimeMinutes });
+  async function worker() {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 800 });
+    while (nextIndex < permutations.length) {
+      const i = nextIndex++;
+      const perm = permutations[i];
+      const url = buildMapsUrl(origin, destination, perm.waypoints);
+      const driveTimeMinutes = await scrapeOneRoute(page, url, perm.label);
+      results[i] = { ...perm, mapsUrl: url, driveTimeMinutes };
+    }
+    await page.close();
   }
 
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
   await browser.close();
 
   const failed = results.filter(r => r.driveTimeMinutes === null).length;

@@ -65,7 +65,7 @@ async function optimize(direction) {
   const dirLabel = direction === 'toHome' ? 'Home' : 'Work';
 
   setButtons(true);
-  setStatus(`Scraping Google Maps for all routes to ${dirLabel}… this takes about 2 minutes.`);
+  setStatus(`Scraping Google Maps for all routes to ${dirLabel}… this usually takes well under a minute.`);
 
   const body = { direction, hourlyRate };
   if (currentLat !== null) {
