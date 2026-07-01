@@ -91,7 +91,6 @@ async function run() {
     const toll = `$${r.tollCost.toFixed(2)}${r.tollEstimated ? ' (est)' : ''}`;
     const score = `$${r.score.toFixed(2)}`;
     console.log(`#${String(r.rank).padEnd(2)} | ${time.padEnd(5)} | tolls ${toll.padEnd(12)} | score ${score.padEnd(7)} | ${r.name}`);
-    console.log(`     → ${r.explanation}`);
   });
 
   console.log('\n' + '='.repeat(60));

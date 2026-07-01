@@ -1,6 +1,6 @@
 // Bump this on every deploy — 3rd digit for most changes, 2nd digit for
 // functional/formula changes, 1st digit reserved for major overhauls.
-const APP_VERSION = 'v1.1.2';
+const APP_VERSION = 'v1.1.3';
 
 const STORAGE_KEYS = {
   hourlyRate: 'commute.hourlyRate',
@@ -210,7 +210,6 @@ function buildCard(r, { compact = false, displayRank = null } = {}) {
         </div>
         ${estimatedNote}
         ${failedNote}
-        ${compact ? '' : `<div class="explanation">${r.explanation}</div>`}
       </div>
     </a>`;
 }
