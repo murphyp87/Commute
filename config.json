@@ -14,7 +14,7 @@
   "defaultHourlyRate": 25,
   "puppeteerHeadless": true,
   "topResultsCount": 3,
-  "scraperConcurrency": 20,
+  "scraperConcurrency": 5,
   "similarityMinutes": 2,
   "similarityDollars": 1
 }

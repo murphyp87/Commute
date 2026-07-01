@@ -48,11 +48,16 @@ async function pageHasTollHint(page) {
 // Scrapes drive time (and optionally a toll hint) from a single Google Maps URL.
 async function scrapeOneRoute(page, url, label, { checkTollHint = false } = {}) {
   try {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    // Google Maps keeps background network traffic (tiles, telemetry) going
+    // indefinitely, so 'networkidle2' routinely burns its full timeout waiting
+    // for quiet that never comes. 'domcontentloaded' plus the explicit
+    // waitForSelector below (which is the actual readiness signal we care
+    // about) is both faster and lighter on constrained hosts.
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
 
     // Fast path: wait directly for the known-good selector instead of a blind sleep.
     try {
-      await page.waitForSelector(TIME_SELECTORS[0], { timeout: 4000 });
+      await page.waitForSelector(TIME_SELECTORS[0], { timeout: 6000 });
     } catch {
       // Didn't show up in time — give the panel a bit longer, then try every selector below.
       await new Promise(r => setTimeout(r, 1000));
@@ -95,6 +100,7 @@ async function scrapeOneRoute(page, url, label, { checkTollHint = false } = {}) 
 async function scrapeRoutes(routes) {
   const headless = config.puppeteerHeadless !== false; // default true; set false to watch
   const concurrency = Math.max(1, Math.min(config.scraperConcurrency || routes.length, routes.length));
+  const startedAt = Date.now();
   const browser = await puppeteer.launch({
     headless: headless ? 'new' : false,
     args: [
@@ -102,33 +108,51 @@ async function scrapeRoutes(routes) {
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage', // required on Linux containers (small /dev/shm)
       '--disable-gpu',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--disable-default-apps',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--mute-audio',
+      '--no-first-run',
     ]
   });
 
-  const results = new Array(routes.length);
-  let nextIndex = 0;
+  try {
+    const results = new Array(routes.length);
+    let nextIndex = 0;
 
-  async function worker() {
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
-    while (nextIndex < routes.length) {
-      const i = nextIndex++;
-      const route = routes[i];
-      const { driveTimeMinutes, tollHint } = await scrapeOneRoute(page, route.mapsUrl, route.name, route);
-      results[i] = { ...route, driveTimeMinutes, tollHint };
+    async function worker() {
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1280, height: 800 });
+      while (nextIndex < routes.length) {
+        const i = nextIndex++;
+        const route = routes[i];
+        // Hard cap per route so one stuck page can't stall the whole batch —
+        // scrapeOneRoute already catches its own errors, but a hung page
+        // (e.g. a wedged Chrome renderer under memory pressure) can still
+        // hang past its internal timeouts.
+        const { driveTimeMinutes, tollHint } = await Promise.race([
+          scrapeOneRoute(page, route.mapsUrl, route.name, route),
+          new Promise(resolve => setTimeout(() => resolve({ driveTimeMinutes: null, tollHint: null }), 12000))
+        ]);
+        results[i] = { ...route, driveTimeMinutes, tollHint };
+      }
+      await page.close();
     }
-    await page.close();
+
+    await Promise.all(Array.from({ length: concurrency }, () => worker()));
+
+    const failed = results.filter(r => r.driveTimeMinutes === null).length;
+    console.log(`[scraper] finished ${results.length} routes in ${((Date.now() - startedAt) / 1000).toFixed(1)}s (concurrency=${concurrency})`);
+    if (failed > 0) {
+      console.warn(`[scraper] ${failed}/${results.length} routes failed time extraction`);
+    }
+
+    return results;
+  } finally {
+    await browser.close().catch(() => {});
   }
-
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
-  await browser.close();
-
-  const failed = results.filter(r => r.driveTimeMinutes === null).length;
-  if (failed > 0) {
-    console.warn(`[scraper] ${failed}/${results.length} routes failed time extraction`);
-  }
-
-  return results;
 }
 
 module.exports = { scrapeRoutes, buildMapsUrl, parseTimeText };
