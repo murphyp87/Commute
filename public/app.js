@@ -1,6 +1,6 @@
 // Bump this on every deploy — 3rd digit for most changes, 2nd digit for
 // functional/formula changes, 1st digit reserved for major overhauls.
-const APP_VERSION = 'v1.1.1';
+const APP_VERSION = 'v1.1.2';
 
 const STORAGE_KEYS = {
   hourlyRate: 'commute.hourlyRate',

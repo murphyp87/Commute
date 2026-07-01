@@ -74,7 +74,12 @@ app.post('/optimize', async (req, res) => {
   const scrapeOrigin = usingLiveOrigin ? liveOrigin : fixedOrigin;
 
   const peakNow = isPeakNow();
-  let applicable = getApplicableRoutes(direction, peakNow);
+  // Every named route's own waypoints are always extracted from its CSV
+  // GoogleMapsLink — the raw link itself is only ever used as a source of
+  // waypoint coordinates now, never opened directly (see buildWaypointMapsUrl
+  // note below).
+  let applicable = getApplicableRoutes(direction, peakNow)
+    .map(r => ({ ...r, waypoints: extractWaypoints(r.mapsUrl) }));
 
   // With a live origin, a waypoint already behind us no longer needs to be
   // forced — drop just that waypoint (not the whole route), keeping
@@ -88,7 +93,7 @@ app.post('/optimize', async (req, res) => {
     applicable = applicable
       .map(r => ({
         ...r,
-        waypoints: extractWaypoints(r.mapsUrl).filter(w =>
+        waypoints: r.waypoints.filter(w =>
           direction === 'ToHome'
             ? w.lat <= liveOrigin.lat + WAYPOINT_MARGIN_DEGREES
             : w.lat >= liveOrigin.lat - WAYPOINT_MARGIN_DEGREES
@@ -111,12 +116,19 @@ app.post('/optimize', async (req, res) => {
 
   const maxTollFallback = Math.max(...applicable.map(r => r.tollTotal));
 
+  // buildWaypointMapsUrl's plain coordinate-path form (not the CSV link's raw
+  // `data=` blob) is used for every named route, live origin or not — on an
+  // iPhone, tapping a google.com/maps link hands off to the native Maps app,
+  // which understands plain origin/waypoint/destination stops but silently
+  // drops the desktop web UI's internal `data=` waypoint blob and falls back
+  // to its own default route. This was reported as "cards all open the
+  // Google Default route" even though the server-side scrape (a desktop
+  // Chrome, which does honor the data= blob) was already scoring/ranking
+  // correctly — a display-only bug on mobile, not a scoring bug.
   const scrapeList = [
     ...applicable.map(r => ({
       name: r.name,
-      mapsUrl: usingLiveOrigin
-        ? buildWaypointMapsUrl(scrapeOrigin, r.waypoints, destination)
-        : r.mapsUrl
+      mapsUrl: buildWaypointMapsUrl(scrapeOrigin, r.waypoints, destination)
     })),
     { name: 'Google Default', mapsUrl: buildMapsUrl(scrapeOrigin, destination), checkTollHint: true }
   ];
