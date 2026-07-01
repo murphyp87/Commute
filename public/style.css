@@ -27,6 +27,13 @@ body {
 }
 
 /* ── Header ── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
 h1 {
   font-size: 1.75rem;
   font-weight: 800;
@@ -36,7 +43,51 @@ h1 {
 .subtitle {
   font-size: 0.875rem;
   color: var(--muted);
-  margin-bottom: 20px;
+}
+
+/* ── Settings menu ── */
+.menu-btn {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.menu-btn:active { transform: scale(0.94); }
+
+.settings-panel {
+  position: fixed;
+  top: 56px; right: 16px; z-index: 25;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 6px 0;
+  min-width: 230px;
+}
+.settings-panel[hidden] { display: none; }
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.setting-row label { color: var(--text); }
+.setting-input-narrow {
+  width: 50px;
+  padding: 5px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* ── Cards ── */
@@ -80,24 +131,22 @@ h1 {
   margin-top: 1px;
 }
 
-/* ── Rate ── */
-.rate-card { display: flex; align-items: center; gap: 12px; }
-.rate-label { font-size: 0.9rem; color: var(--muted); flex: 1; }
+/* ── Rate / settings inputs ── */
 .rate-input-row { display: flex; align-items: center; gap: 4px; }
-.rate-symbol { font-size: 1rem; color: var(--muted); }
-.rate-unit   { font-size: 0.875rem; color: var(--muted); white-space: nowrap; }
+.rate-symbol { font-size: 0.9rem; color: var(--muted); }
+.rate-unit   { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 #hourlyRate {
-  width: 60px;
-  padding: 6px 8px;
+  width: 55px;
+  padding: 5px 6px;
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-align: center;
   color: var(--text);
   -moz-appearance: textfield;
 }
-#hourlyRate:focus {
+#hourlyRate:focus, .setting-input-narrow:focus {
   outline: none;
   border-color: var(--blue);
 }
@@ -131,28 +180,6 @@ h1 {
 .btn-work { background: var(--blue); }
 .btn-icon  { font-size: 1.5rem; }
 .btn-label { font-size: 0.9rem; }
-
-/* ── Geolocation ── */
-.geo-row { margin-bottom: 16px; }
-.geo-btn {
-  width: 100%;
-  padding: 11px;
-  background: var(--surface);
-  border: 1.5px dashed var(--border);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  color: var(--muted);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.geo-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
-.geo-btn:disabled { opacity: 0.5; cursor: default; }
-.geo-status {
-  font-size: 0.8rem;
-  color: var(--muted);
-  margin-top: 6px;
-  min-height: 18px;
-}
 
 /* ── Status / loading ── */
 .status-box {
@@ -213,7 +240,11 @@ h1 {
   display: flex;
   gap: 12px;
   border-left: 4px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.08s ease;
 }
+.result-card:active { transform: scale(0.985); }
 .rank-1 { border-left-color: var(--green); }
 .rank-2 { border-left-color: var(--yellow); }
 .rank-3 { border-left-color: var(--red); }
@@ -230,6 +261,30 @@ h1 {
 .rank-3 .result-rank { color: var(--red); }
 
 .result-body { flex: 1; min-width: 0; }
+
+/* Google Default — always shown as a smaller, visually secondary 4th card */
+.result-card-compact {
+  padding: 10px 14px;
+  box-shadow: none;
+  border-left-color: var(--border);
+  opacity: 0.8;
+}
+.result-card-compact .result-label { font-size: 0.8rem; margin-bottom: 6px; }
+.result-card-compact .stat-val { font-size: 0.85rem; }
+.default-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  min-width: 28px;
+  padding-top: 3px;
+}
+.estimated-note {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
 
 .result-label {
   font-size: 0.9rem;
@@ -270,19 +325,6 @@ h1 {
 }
 .stat-score .stat-val { color: var(--blue); }
 
-.toll-detail {
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin-bottom: 5px;
-}
-.placeholder-warn {
-  font-size: 0.78rem;
-  color: #b45309;
-  background: #fef3c7;
-  border-radius: 6px;
-  padding: 4px 8px;
-  margin-bottom: 5px;
-}
 .failed-note {
   font-size: 0.78rem;
   color: #c5221f;
@@ -306,6 +348,50 @@ h1 {
   background: #e8f0fe;
 }
 .maps-link:hover { background: #d2e3fc; }
+
+/* ── Expandable "all routes" table ── */
+.toggle-all-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  text-align: center;
+}
+.all-routes-table {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  margin-top: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.all-routes-header, .all-routes-row {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 1fr;
+  gap: 6px;
+  padding: 8px 4px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: inherit;
+}
+.all-routes-header {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--border);
+}
+.all-routes-row {
+  border-bottom: 1px solid var(--border);
+}
+.all-routes-row:last-child { border-bottom: none; }
+.all-routes-row .ar-name { font-weight: 600; }
+.ar-time, .ar-toll, .ar-score { text-align: right; }
 
 .no-results {
   font-size: 0.9rem;

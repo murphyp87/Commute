@@ -16,53 +16,11 @@ const TIME_SELECTORS = [
   'div[class*="duration"]',
 ];
 
-// Builds a Google Maps directions URL with ordered waypoints.
-function buildMapsUrl(origin, destination, waypoints) {
+// Builds a plain (no forced waypoints) Google Maps directions URL — used for the
+// always-included "Google Default" route.
+function buildMapsUrl(origin, destination) {
   const encode = (s) => encodeURIComponent(typeof s === 'string' ? s : `${s.lat},${s.lng}`);
-  const base = 'https://www.google.com/maps/dir/';
-  const parts = [encode(origin.address || `${origin.lat},${origin.lng}`)];
-  for (const wp of waypoints) parts.push(encode(wp.address || `${wp.lat},${wp.lng}`));
-  parts.push(encode(destination.address || `${destination.lat},${destination.lng}`));
-  return base + parts.join('/') + '/';
-}
-
-// Scrapes drive time from a single Google Maps URL.
-// Returns minutes as a number, or null if extraction fails.
-async function scrapeOneRoute(page, url, label) {
-  try {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-
-    // Fast path: wait directly for the known-good selector instead of a blind sleep.
-    try {
-      await page.waitForSelector(TIME_SELECTORS[0], { timeout: 4000 });
-    } catch {
-      // Didn't show up in time — give the panel a bit longer, then try every selector below.
-      await new Promise(r => setTimeout(r, 1000));
-    }
-
-    for (const selector of TIME_SELECTORS) {
-      try {
-        const el = await page.$(selector);
-        if (!el) continue;
-        const text = await page.evaluate(e => e.textContent || e.getAttribute('aria-label') || '', el);
-        const minutes = parseTimeText(text);
-        if (minutes !== null) {
-          console.log(`  [scraper] "${label}" → ${minutes} min (selector: ${selector})`);
-          return minutes;
-        }
-      } catch {
-        // try next selector
-      }
-    }
-
-    // All selectors failed — log the URL for debugging
-    console.warn(`  [scraper] WARN: no time found for "${label}" — URL: ${url}`);
-    console.warn(`  [scraper] To debug, set puppeteerHeadless: false in config.json and inspect the page`);
-    return null;
-  } catch (err) {
-    console.error(`  [scraper] ERROR on "${label}": ${err.message}`);
-    return null;
-  }
+  return `https://www.google.com/maps/dir/${encode(origin.address || `${origin.lat},${origin.lng}`)}/${encode(destination.address || `${destination.lat},${destination.lng}`)}/`;
 }
 
 // Parses a Google Maps time string like "1 hr 23 min" or "45 min" into total minutes.
@@ -76,14 +34,67 @@ function parseTimeText(text) {
   return hours * 60 + mins;
 }
 
-// Scrapes drive times for all permutations.
-// Returns the permutations array enriched with { mapsUrl, driveTimeMinutes }.
-// Routes are split across a small pool of concurrent tabs (scraperConcurrency in
-// config.json) instead of visiting one page at a time — this is the main lever
-// on total request time.
-async function scrapeTimes(permutations, origin, destination) {
+// Google's directions panel doesn't show an exact toll dollar amount for the
+// top route, but it does flag "This route has tolls." when tolls apply.
+async function pageHasTollHint(page) {
+  try {
+    const bodyText = await page.evaluate(() => document.body.innerText);
+    return /this route has tolls/i.test(bodyText);
+  } catch {
+    return false;
+  }
+}
+
+// Scrapes drive time (and optionally a toll hint) from a single Google Maps URL.
+async function scrapeOneRoute(page, url, label, { checkTollHint = false } = {}) {
+  try {
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+    // Fast path: wait directly for the known-good selector instead of a blind sleep.
+    try {
+      await page.waitForSelector(TIME_SELECTORS[0], { timeout: 4000 });
+    } catch {
+      // Didn't show up in time — give the panel a bit longer, then try every selector below.
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    let driveTimeMinutes = null;
+    for (const selector of TIME_SELECTORS) {
+      try {
+        const el = await page.$(selector);
+        if (!el) continue;
+        const text = await page.evaluate(e => e.textContent || e.getAttribute('aria-label') || '', el);
+        const minutes = parseTimeText(text);
+        if (minutes !== null) {
+          console.log(`  [scraper] "${label}" → ${minutes} min (selector: ${selector})`);
+          driveTimeMinutes = minutes;
+          break;
+        }
+      } catch {
+        // try next selector
+      }
+    }
+
+    if (driveTimeMinutes === null) {
+      console.warn(`  [scraper] WARN: no time found for "${label}" — URL: ${url}`);
+      console.warn(`  [scraper] To debug, set puppeteerHeadless: false in config.json and inspect the page`);
+    }
+
+    const tollHint = checkTollHint ? await pageHasTollHint(page) : null;
+    return { driveTimeMinutes, tollHint };
+  } catch (err) {
+    console.error(`  [scraper] ERROR on "${label}": ${err.message}`);
+    return { driveTimeMinutes: null, tollHint: null };
+  }
+}
+
+// Scrapes drive times for a fixed list of routes: [{ name, mapsUrl, checkTollHint? }].
+// Routes are scraped across a pool of concurrent tabs (scraperConcurrency in
+// config.json, defaults to scraping all of them at once since the route list is
+// now small and fixed) instead of one at a time.
+async function scrapeRoutes(routes) {
   const headless = config.puppeteerHeadless !== false; // default true; set false to watch
-  const concurrency = Math.max(1, Math.min(config.scraperConcurrency || 4, permutations.length));
+  const concurrency = Math.max(1, Math.min(config.scraperConcurrency || routes.length, routes.length));
   const browser = await puppeteer.launch({
     headless: headless ? 'new' : false,
     args: [
@@ -94,18 +105,17 @@ async function scrapeTimes(permutations, origin, destination) {
     ]
   });
 
-  const results = new Array(permutations.length);
+  const results = new Array(routes.length);
   let nextIndex = 0;
 
   async function worker() {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800 });
-    while (nextIndex < permutations.length) {
+    while (nextIndex < routes.length) {
       const i = nextIndex++;
-      const perm = permutations[i];
-      const url = buildMapsUrl(origin, destination, perm.waypoints);
-      const driveTimeMinutes = await scrapeOneRoute(page, url, perm.label);
-      results[i] = { ...perm, mapsUrl: url, driveTimeMinutes };
+      const route = routes[i];
+      const { driveTimeMinutes, tollHint } = await scrapeOneRoute(page, route.mapsUrl, route.name, route);
+      results[i] = { ...route, driveTimeMinutes, tollHint };
     }
     await page.close();
   }
@@ -121,4 +131,4 @@ async function scrapeTimes(permutations, origin, destination) {
   return results;
 }
 
-module.exports = { scrapeTimes, buildMapsUrl, parseTimeText };
+module.exports = { scrapeRoutes, buildMapsUrl, parseTimeText };

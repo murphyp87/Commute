@@ -8,8 +8,38 @@
 </head>
 <body>
   <div class="container">
-    <h1>NJ Commute</h1>
-    <p class="subtitle">Drive time + tolls, ranked by value</p>
+    <header class="page-header">
+      <div>
+        <h1>NJ Commute</h1>
+        <p class="subtitle">Drive time + tolls, ranked by value</p>
+      </div>
+      <button id="menuBtn" class="menu-btn" type="button" aria-label="Open settings" aria-haspopup="true" aria-expanded="false">⚙</button>
+    </header>
+
+    <div id="settingsPanel" class="settings-panel" hidden role="menu" aria-label="Settings">
+      <div class="setting-row">
+        <label for="hourlyRate">My time is worth</label>
+        <div class="rate-input-row">
+          <span class="rate-symbol">$</span>
+          <input type="number" id="hourlyRate" min="1" max="500" step="1">
+          <span class="rate-unit">/ hr</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <label for="simMinutes">Hide similar within</label>
+        <div class="rate-input-row">
+          <input type="number" id="simMinutes" min="0" max="60" step="1" class="setting-input-narrow">
+          <span class="rate-unit">min</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <label for="simDollars">and within</label>
+        <div class="rate-input-row">
+          <span class="rate-symbol">$</span>
+          <input type="number" id="simDollars" min="0" max="50" step="0.25" class="setting-input-narrow">
+        </div>
+      </div>
+    </div>
 
     <div class="card locations-card">
       <div class="location-row">
@@ -29,15 +59,6 @@
       </div>
     </div>
 
-    <div class="card rate-card">
-      <label class="rate-label" for="hourlyRate">My time is worth</label>
-      <div class="rate-input-row">
-        <span class="rate-symbol">$</span>
-        <input type="number" id="hourlyRate" min="1" max="500" step="1">
-        <span class="rate-unit">/ hour</span>
-      </div>
-    </div>
-
     <div class="dir-buttons">
       <button class="dir-btn btn-home" id="btnToHome" onclick="optimize('toHome')">
         <span class="btn-icon">🏠</span>
@@ -47,13 +68,6 @@
         <span class="btn-icon">🏢</span>
         <span class="btn-label">To Work</span>
       </button>
-    </div>
-
-    <div class="geo-row">
-      <button class="geo-btn" id="btnGeo" onclick="useCurrentLocation()">
-        📍 Use my current location as start point
-      </button>
-      <div id="geoStatus" class="geo-status"></div>
     </div>
 
     <div id="statusBox" class="status-box hidden">

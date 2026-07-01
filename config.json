@@ -13,6 +13,8 @@
   },
   "defaultHourlyRate": 25,
   "puppeteerHeadless": true,
-  "topResultsCount": 5,
-  "scraperConcurrency": 4
+  "topResultsCount": 3,
+  "scraperConcurrency": 20,
+  "similarityMinutes": 2,
+  "similarityDollars": 1
 }
