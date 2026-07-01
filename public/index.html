@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NJ Commute Optimizer</title>
+  <title>Commute</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header class="page-header">
       <div>
-        <h1>NJ Commute</h1>
+        <h1>Commute</h1>
         <p class="subtitle">Drive time + tolls, ranked by value</p>
       </div>
       <button id="menuBtn" class="menu-btn" type="button" aria-label="Open settings" aria-haspopup="true" aria-expanded="false">⚙</button>
@@ -74,6 +74,15 @@
       <div class="spinner"></div>
       <div id="statusText" class="status-text"></div>
     </div>
+
+    <div id="resultsSection" class="hidden">
+      <div id="resultsMeta" class="results-meta"></div>
+      <div id="resultsList" class="results-list"></div>
+      <button id="toggleAllBtn" class="toggle-all-btn hidden" type="button">▾ Show all routes</button>
+      <div id="allRoutesTable" class="all-routes-table hidden"></div>
+    </div>
+
+    <footer id="app-version" class="app-version"></footer>
   </div>
 
   <script src="app.js"></script>

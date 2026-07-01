@@ -119,15 +119,17 @@ h1 {
 .dot-work { background: var(--blue); }
 .dot-home { background: var(--green); }
 .location-label {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--muted);
+  opacity: 0.8;
 }
 .location-addr {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--muted);
   margin-top: 1px;
 }
 
@@ -161,11 +163,11 @@ h1 {
 }
 .dir-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 18px 10px;
+  gap: 8px;
+  padding: 13px 10px;
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
@@ -178,7 +180,7 @@ h1 {
 .dir-btn:disabled { opacity: 0.45; cursor: default; }
 .btn-home { background: var(--green); }
 .btn-work { background: var(--blue); }
-.btn-icon  { font-size: 1.5rem; }
+.btn-icon  { font-size: 1.2rem; }
 .btn-label { font-size: 0.9rem; }
 
 /* ── Status / loading ── */
@@ -207,16 +209,8 @@ h1 {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Results page ── */
-.results-header { margin-bottom: 16px; }
-.back-link {
-  display: inline-block;
-  font-size: 0.875rem;
-  color: var(--blue);
-  text-decoration: none;
-  margin-bottom: 8px;
-}
-.back-link:hover { text-decoration: underline; }
+/* ── Results (appended below the direction buttons on the same page) ── */
+#resultsSection { margin-top: 18px; }
 .results-meta {
   font-size: 0.8rem;
   color: var(--muted);
@@ -224,6 +218,7 @@ h1 {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+  margin-bottom: 10px;
 }
 .meta-dir  { font-weight: 700; color: var(--text); }
 .meta-sep  { color: var(--border); }
@@ -400,3 +395,11 @@ h1 {
   padding: 30px 0;
 }
 .no-results a { color: var(--blue); }
+
+.app-version {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.68rem;
+  opacity: 0.6;
+  padding: 22px 0 6px;
+}
