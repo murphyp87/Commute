@@ -50,6 +50,8 @@ function loadRows() {
       name: r.Name,
       offPeak: r['Off/Peak'], // '', 'Peak', or 'Off-Peak'
       preference: parseFloat(r.Preference),
+      toll1: parseCurrency(r.Toll1),
+      toll2: parseCurrency(r.Toll2),
       tollTotal: parseCurrency(r.TollTotal),
       mapsUrl: r.GoogleMapsLink
     }));

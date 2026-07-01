@@ -1,6 +1,6 @@
 // Bump this on every deploy — 3rd digit for most changes, 2nd digit for
 // functional/formula changes, 1st digit reserved for major overhauls.
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.1.1';
 
 const STORAGE_KEYS = {
   hourlyRate: 'commute.hourlyRate',
@@ -179,7 +179,9 @@ function buildCard(r, { compact = false, displayRank = null } = {}) {
     ? '<div class="default-badge">Google Default</div>'
     : `<div class="result-rank">#${displayRank}</div>`;
   const estimatedNote = r.tollEstimated
-    ? '<div class="estimated-note">* estimated toll — Google doesn\'t show an exact amount for this route</div>'
+    ? isDefault
+      ? '<div class="estimated-note">* estimated toll — Google doesn\'t show an exact amount for this route</div>'
+      : '<div class="estimated-note">* estimated toll — adjusted for your live location, not exact</div>'
     : '';
   const failedNote = r.driveTimeMinutes == null
     ? '<div class="failed-note">⚠ Could not retrieve drive time — see server console</div>'

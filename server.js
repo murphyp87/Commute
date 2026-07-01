@@ -8,6 +8,37 @@ const { scoreRoutes, dedupeSimilar } = require('./src/scoring');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Only throw out a route's waypoint if it's more than this far in the wrong
+// direction — a strict north/south cutoff was too eager to drop otherwise-
+// valid waypoints sitting close to the live position.
+const WAYPOINT_MARGIN_MILES = 2;
+const MILES_PER_DEGREE_LATITUDE = 69; // ~constant regardless of longitude
+const WAYPOINT_MARGIN_DEGREES = WAYPOINT_MARGIN_MILES / MILES_PER_DEGREE_LATITUDE;
+
+// Fixed GSP mainline toll-plaza/exit locations used to decide which mainline
+// tolls a live-location trip would actually still cross. Coordinates found
+// via web search (Essex/Raritan plazas); Exit 114 taken from routes.csv's
+// own "114-*" route waypoints.
+const GSP_EXIT_114 = { lat: 40.3754147, lng: -74.1456679 };
+const GSP_ESSEX_TOLL_PLAZA = { lat: 40.805132, lng: -74.184360 }; // Bloomfield, between exits 149-150
+const GSP_RARITAN_TOLL_PLAZA = { lat: 40.486644, lng: -74.302905 }; // Sayreville
+
+// Named ToWork routes charge Toll1 only when entering the GSP at/below
+// Exit 114 (116-entry routes already carry Toll1=$0) — so if the live
+// origin is already north of Exit 114, that toll no longer applies. Named
+// ToHome routes' Toll1/Toll2 represent the Essex/Raritan mainline barriers
+// respectively — if the live origin is already south of one, that barrier
+// was never crossed.
+function adjustTollForLiveOrigin(direction, liveOrigin, route) {
+  if (direction === 'ToWork') {
+    return liveOrigin.lat > GSP_EXIT_114.lat ? route.tollTotal - route.toll1 : route.tollTotal;
+  }
+  let adjusted = route.tollTotal;
+  if (liveOrigin.lat < GSP_ESSEX_TOLL_PLAZA.lat) adjusted -= route.toll1;
+  if (liveOrigin.lat < GSP_RARITAN_TOLL_PLAZA.lat) adjusted -= route.toll2;
+  return adjusted;
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -58,7 +89,9 @@ app.post('/optimize', async (req, res) => {
       .map(r => ({
         ...r,
         waypoints: extractWaypoints(r.mapsUrl).filter(w =>
-          direction === 'ToHome' ? w.lat <= liveOrigin.lat : w.lat >= liveOrigin.lat
+          direction === 'ToHome'
+            ? w.lat <= liveOrigin.lat + WAYPOINT_MARGIN_DEGREES
+            : w.lat >= liveOrigin.lat - WAYPOINT_MARGIN_DEGREES
         )
       }))
       .filter(r => r.waypoints.length > 0);
@@ -117,8 +150,8 @@ app.post('/optimize', async (req, res) => {
       name: s.name,
       preference: meta.preference,
       mapsUrl: s.mapsUrl,
-      tollCost: meta.tollTotal,
-      tollEstimated: false,
+      tollCost: usingLiveOrigin ? adjustTollForLiveOrigin(direction, liveOrigin, meta) : meta.tollTotal,
+      tollEstimated: usingLiveOrigin,
       driveTimeMinutes: s.driveTimeMinutes
     };
   });
