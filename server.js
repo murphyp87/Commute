@@ -1,8 +1,8 @@
 const express = require('express');
 const path = require('path');
 const config = require('./config.json');
-const { getApplicableRoutes, isPeakNow } = require('./src/routesData');
-const { scrapeRoutes, buildMapsUrl } = require('./src/scraper');
+const { getApplicableRoutes, isPeakNow, extractWaypoints } = require('./src/routesData');
+const { scrapeRoutes, buildMapsUrl, buildWaypointMapsUrl } = require('./src/scraper');
 const { scoreRoutes, dedupeSimilar } = require('./src/scoring');
 
 const app = express();
@@ -25,7 +25,7 @@ app.get('/config', (req, res) => {
 // POST /optimize
 // Body: { direction: 'toHome'|'toWork', hourlyRate?, similarityMinutes?, similarityDollars? }
 app.post('/optimize', async (req, res) => {
-  const { direction: dirParam, hourlyRate, similarityMinutes, similarityDollars } = req.body;
+  const { direction: dirParam, hourlyRate, similarityMinutes, similarityDollars, origin: liveOrigin } = req.body;
 
   const direction = dirParam === 'toHome' ? 'ToHome' : dirParam === 'toWork' ? 'ToWork' : null;
   if (!direction) {
@@ -36,11 +36,41 @@ app.post('/optimize', async (req, res) => {
   const minuteThreshold = parseFloat(similarityMinutes) || config.similarityMinutes;
   const dollarThreshold = parseFloat(similarityDollars) || config.similarityDollars;
 
-  const origin = direction === 'ToHome' ? config.locations.work : config.locations.home;
+  const fixedOrigin = direction === 'ToHome' ? config.locations.work : config.locations.home;
   const destination = direction === 'ToHome' ? config.locations.home : config.locations.work;
 
+  const usingLiveOrigin = liveOrigin && typeof liveOrigin.lat === 'number' && typeof liveOrigin.lng === 'number';
+  const scrapeOrigin = usingLiveOrigin ? liveOrigin : fixedOrigin;
+
   const peakNow = isPeakNow();
-  const applicable = getApplicableRoutes(direction, peakNow);
+  let applicable = getApplicableRoutes(direction, peakNow);
+
+  // With a live origin, a waypoint already behind us no longer needs to be
+  // forced — drop just that waypoint (not the whole route), keeping
+  // whichever remain ahead, since those are what still distinguish one
+  // named route from another (e.g. which GSP exit to take near the
+  // destination). A route left with zero waypoints is a plain point-to-
+  // point trip — identical to Google Default — so it's dropped instead of
+  // scraped again; routes that reduce to the exact same remaining
+  // waypoints are also deduped, keeping the higher-preference one.
+  if (usingLiveOrigin) {
+    applicable = applicable
+      .map(r => ({
+        ...r,
+        waypoints: extractWaypoints(r.mapsUrl).filter(w =>
+          direction === 'ToHome' ? w.lat <= liveOrigin.lat : w.lat >= liveOrigin.lat
+        )
+      }))
+      .filter(r => r.waypoints.length > 0);
+
+    const seenKeys = new Set();
+    applicable = applicable.filter(r => {
+      const key = r.waypoints.map(w => `${w.lat},${w.lng}`).join('|');
+      if (seenKeys.has(key)) return false;
+      seenKeys.add(key);
+      return true;
+    });
+  }
 
   if (applicable.length === 0) {
     return res.status(500).json({ error: `No routes defined for ${direction} in routes.csv` });
@@ -49,8 +79,13 @@ app.post('/optimize', async (req, res) => {
   const maxTollFallback = Math.max(...applicable.map(r => r.tollTotal));
 
   const scrapeList = [
-    ...applicable.map(r => ({ name: r.name, mapsUrl: r.mapsUrl })),
-    { name: 'Google Default', mapsUrl: buildMapsUrl(origin, destination), checkTollHint: true }
+    ...applicable.map(r => ({
+      name: r.name,
+      mapsUrl: usingLiveOrigin
+        ? buildWaypointMapsUrl(scrapeOrigin, r.waypoints, destination)
+        : r.mapsUrl
+    })),
+    { name: 'Google Default', mapsUrl: buildMapsUrl(scrapeOrigin, destination), checkTollHint: true }
   ];
 
   console.log(`\n[optimize] direction=${direction} peak=${peakNow} rate=$${rate}/hr routes=${scrapeList.length}`);
@@ -81,7 +116,7 @@ app.post('/optimize', async (req, res) => {
     return {
       name: s.name,
       preference: meta.preference,
-      mapsUrl: meta.mapsUrl,
+      mapsUrl: s.mapsUrl,
       tollCost: meta.tollTotal,
       tollEstimated: false,
       driveTimeMinutes: s.driveTimeMinutes
@@ -109,7 +144,7 @@ app.post('/optimize', async (req, res) => {
 
   res.json({
     direction: dirParam,
-    origin: origin.address,
+    origin: usingLiveOrigin ? 'your current location' : fixedOrigin.address,
     destination: destination.address,
     hourlyRate: rate,
     isPeak: peakNow,

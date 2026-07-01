@@ -90,4 +90,14 @@ function getApplicableRoutes(direction, peakNow) {
     });
 }
 
-module.exports = { loadRows, isPeakNow, getApplicableRoutes };
+// Pulls the ordered chain of coordinate pairs baked into a Google Maps dir
+// URL's `data=` param (`!1d{lng}!2d{lat}`), drops the first (origin) and
+// last (destination) pair — which are just the fixed Home/Work addresses —
+// and returns whatever forced waypoints are in between, in route order.
+function extractWaypoints(mapsUrl) {
+  const pairs = [...mapsUrl.matchAll(/!1d(-?[\d.]+)!2d(-?[\d.]+)/g)]
+    .map(m => ({ lng: parseFloat(m[1]), lat: parseFloat(m[2]) }));
+  return pairs.slice(1, -1);
+}
+
+module.exports = { loadRows, isPeakNow, getApplicableRoutes, extractWaypoints };

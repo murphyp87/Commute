@@ -23,6 +23,21 @@ function buildMapsUrl(origin, destination) {
   return `https://www.google.com/maps/dir/${encode(origin.address || `${origin.lat},${origin.lng}`)}/${encode(destination.address || `${destination.lat},${destination.lng}`)}/`;
 }
 
+// Same idea as buildMapsUrl(), but for a route with forced waypoints in
+// between — used when substituting a live-location origin in for a route
+// whose GoogleMapsLink was baked from the fixed Home/Work address. No
+// `data=` blob (place IDs) is needed; a plain coordinate chain is enough
+// for Google Maps to route through each stop in order.
+function buildWaypointMapsUrl(origin, waypoints, destination) {
+  const encode = (s) => encodeURIComponent(typeof s === 'string' ? s : `${s.lat},${s.lng}`);
+  const stops = [
+    origin.address || `${origin.lat},${origin.lng}`,
+    ...waypoints.map(w => `${w.lat},${w.lng}`),
+    destination.address || `${destination.lat},${destination.lng}`
+  ];
+  return `https://www.google.com/maps/dir/${stops.map(encode).join('/')}/`;
+}
+
 // Parses a Google Maps time string like "1 hr 23 min" or "45 min" into total minutes.
 function parseTimeText(text) {
   if (!text) return null;
@@ -155,4 +170,4 @@ async function scrapeRoutes(routes) {
   }
 }
 
-module.exports = { scrapeRoutes, buildMapsUrl, parseTimeText };
+module.exports = { scrapeRoutes, buildMapsUrl, buildWaypointMapsUrl, parseTimeText };

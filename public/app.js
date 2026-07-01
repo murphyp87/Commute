@@ -1,15 +1,22 @@
 // Bump this on every deploy — 3rd digit for most changes, 2nd digit for
 // functional/formula changes, 1st digit reserved for major overhauls.
-const APP_VERSION = 'v1.0.2';
+const APP_VERSION = 'v1.1.0';
 
 const STORAGE_KEYS = {
   hourlyRate: 'commute.hourlyRate',
   simMinutes: 'commute.simMinutes',
-  simDollars: 'commute.simDollars'
+  simDollars: 'commute.simDollars',
+  useMyLocation: 'commute.useMyLocation'
 };
 
 async function init() {
   document.getElementById('app-version').textContent = APP_VERSION;
+
+  const useMyLocation = document.getElementById('useMyLocation');
+  useMyLocation.checked = load(STORAGE_KEYS.useMyLocation, 'true') === 'true';
+  useMyLocation.addEventListener('change', () => {
+    localStorage.setItem(STORAGE_KEYS.useMyLocation, useMyLocation.checked);
+  });
 
   try {
     const cfg = await fetch('/config').then(r => r.json());
@@ -22,6 +29,20 @@ async function init() {
   } catch (e) {
     document.getElementById('workAddr').textContent = 'Could not load config';
   }
+}
+
+// Wraps navigator.geolocation in a Promise; resolves null on any failure
+// (unsupported, denied, timeout) so callers can fall back to the fixed
+// Home/Work address without special-casing errors.
+function getCurrentLocation() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
 }
 
 function load(key, fallback) {
@@ -68,6 +89,17 @@ async function optimize(direction) {
     similarityMinutes: simMinutes,
     similarityDollars: simDollars
   };
+
+  if (document.getElementById('useMyLocation').checked) {
+    setStatus('Getting your location…');
+    const location = await getCurrentLocation();
+    if (location) {
+      body.origin = location;
+      setStatus(`Scraping Google Maps for routes to ${dirLabel}… usually under 15 seconds.`);
+    } else {
+      setStatus(`Couldn't get your location — using default address instead. Scraping Google Maps for routes to ${dirLabel}…`);
+    }
+  }
 
   try {
     const resp = await fetch('/optimize', {

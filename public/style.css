@@ -157,6 +157,22 @@ h1 {
 }
 #hourlyRate::-webkit-inner-spin-button { display: none; }
 
+/* ── Use my location toggle ── */
+.geo-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px 10px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.geo-toggle-row input {
+  width: 16px; height: 16px;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
 /* ── Direction buttons ── */
 .dir-buttons {
   display: grid;
