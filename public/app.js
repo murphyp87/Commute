@@ -1,6 +1,6 @@
 // Bump this on every deploy — 3rd digit for most changes, 2nd digit for
 // functional/formula changes, 1st digit reserved for major overhauls.
-const APP_VERSION = 'v1.1.5';
+const APP_VERSION = 'v1.1.6';
 
 const STORAGE_KEYS = {
   hourlyRate: 'commute.hourlyRate',
@@ -287,6 +287,12 @@ function initSettingsMenu() {
     document.getElementById(id).addEventListener('change', (e) => {
       localStorage.setItem(STORAGE_KEYS[id], e.target.value);
     });
+  });
+
+  document.getElementById('openBrowserBtn').addEventListener('click', () => {
+    window.open(window.location.href, '_blank', 'noopener,noreferrer');
+    panel.setAttribute('hidden', '');
+    menuBtn.setAttribute('aria-expanded', 'false');
   });
 
   document.getElementById('clearResultsBtn').addEventListener('click', () => {

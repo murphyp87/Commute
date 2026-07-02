@@ -119,6 +119,20 @@ h1 {
   cursor: pointer;
 }
 .clear-results-btn:active { transform: scale(0.97); }
+.menu-action-btn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 4px 16px 6px;
+  padding: 8px 0;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.menu-action-btn:active { transform: scale(0.97); }
 
 /* ── Cards ── */
 .card {
